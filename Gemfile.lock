@@ -1,0 +1,20 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    dotenv (1.0.2)
+    excon (0.42.0)
+    json (1.8.1)
+    mandrill-api (1.0.53)
+      excon (>= 0.16.0, < 1.0)
+      json (>= 1.7.7, < 2.0)
+    mini_portile (0.6.1)
+    nokogiri (1.6.4.1)
+      mini_portile (~> 0.6.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  dotenv (~> 1.0.2)
+  mandrill-api (~> 1.0.53)
+  nokogiri (~> 1.6.4.1)
