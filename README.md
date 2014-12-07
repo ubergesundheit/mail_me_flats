@@ -12,7 +12,7 @@ You need:
 - Obtain a Mandrill API Key
 - Go to immobilienscout and ebay kleinanzeigen and configure the search
 - Take the url of the result pages
-- Edit the `.env` file. You can copy the example file
+- Edit the `.env` file. You can copy the example file, multiple urls delimted with a `;`
 - set up the script as cronjob or run it without cron
 - ???
 - wait for mails
