@@ -64,10 +64,12 @@ begin
   whngs = []
   whngs += ebay_search_urls.map do |url|
     ebay(url)
-  end.flatten
+  end
   whngs += immoscout_search_urls.map do |url|
     immoscout(url)
-  end.flatten
+  end
+
+  whngs.flatten!.compact!
 
   unless whngs.compact.length == 0
     message = {
