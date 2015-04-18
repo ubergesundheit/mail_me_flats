@@ -41,9 +41,9 @@ def immoscout(search_url)
   immo_doc = Nokogiri::HTML(open("#{@immoscout_base_url}#{search_url}"))
 
   immo_doc.css("#resultListItems > li").reject { |li| li.css("a").count == 0 }.map do |li|
-    expose_href = li.css("a").reject { |a| a["title"] == nil }.first
+    expose_href = li.css(".headline-link").first
 
-    expose_title = expose_href["title"]
+    expose_title = expose_href.text
     expose_link = "#{@immoscout_base_url}#{expose_href["href"]}"
 
     expose_details = [
@@ -71,7 +71,7 @@ begin
 
   whngs.flatten!.compact!
 
-  unless whngs.compact.length == 0
+  unless whngs.length == 0
     message = {
       subject: ENV["EMAIL_SUBJECT"],
       from_name: ENV["EMAIL_FROM_NAME"],
