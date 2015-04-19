@@ -1,0 +1,5 @@
+app:
+  build: .
+  env_file:
+    - .env
+  command: "go-cron '0 */3 * * * *' ./mail_me_flats.rb"

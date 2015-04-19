@@ -3,11 +3,11 @@
 require "nokogiri"
 require "open-uri"
 require "mandrill"
-require "dotenv"
-Dotenv.load
+require "json"
 
 @ebay_base_url = "http://kleinanzeigen.ebay.de"
 @immoscout_base_url = "http://www.immobilienscout24.de"
+@immoscout_json_controller_url = "/Suche/controller/asyncResults.go?searchUrl="
 
 immoscout_search_urls = ENV["IMMOSCOUT_URL"].split(';')
 ebay_search_urls = ENV["KLEINANZEIGEN_URL"].split(';')
@@ -35,6 +35,49 @@ def ebay(search_url)
       url: url
     } unless @seen.include? "#{url}\n"
   end
+end
+
+def immoscout_json(search_url)
+  json = JSON.parse(open("#{@immoscout_base_url}#{@immoscout_json_controller_url}#{search_url}").read)
+
+  results = json["searchResult"]["results"]
+
+  results.map do |res|
+
+    expose_link = "#{@immoscout_base_url}/expose/#{res["id"]}"
+
+    expose_title = res["title"]
+
+    expose_details = ""
+
+    begin
+      expose_details += "#{res["address"]}"
+    rescue
+    end
+
+    begin
+      expose_details += " #{res["district"]}"
+    rescue
+    end
+
+    begin
+      expose_details += " #{res["attributes"].map(&:values).map { |a| a.reverse.join (" ") }.join(", ")}"
+    rescue
+    end
+
+    begin
+      expose_details += " #{res["checkedAttributes"].join(", ")}"
+    rescue
+    end
+
+    {
+      details: expose_details,
+      title: expose_title,
+      url: expose_link
+    } unless @seen.include? "#{expose_link}\n"
+  end
+
+
 end
 
 def immoscout(search_url)
@@ -66,25 +109,27 @@ begin
     ebay(url)
   end
   whngs += immoscout_search_urls.map do |url|
-    immoscout(url)
+    immoscout_json(url)
   end
 
   whngs.flatten!.compact!
 
   unless whngs.length == 0
-    message = {
-      subject: ENV["EMAIL_SUBJECT"],
-      from_name: ENV["EMAIL_FROM_NAME"],
-      text: whngs.map { |e| e.values.join " " }.join("\n"),
-      to: [{
-            email: ENV["EMAIL_TO"],
-            name: ENV["EMAIL_TO_NAME"]
-           }],
-      from_email: ENV["EMAIL_FROM"]
-      }
-    sending = mandrill.messages.send message
-    if sending[0]["status"] == "sent"
-      file.write(whngs.compact.map { |e| e[:url] }.join("\n")+"\n")
+    whngs.each_slice(2) do |whngs_f|
+      message = {
+        subject: ENV["EMAIL_SUBJECT"],
+        from_name: ENV["EMAIL_FROM_NAME"],
+        text: whngs_f.map { |e| e.values.join " " }.join("\n"),
+        to: [{
+              email: ENV["EMAIL_TO"],
+              name: ENV["EMAIL_TO_NAME"]
+             }],
+        from_email: ENV["EMAIL_FROM"]
+        }
+      sending = mandrill.messages.send message
+      if sending[0]["status"] == "sent"
+        file.write(whngs_f.compact.map { |e| e[:url] }.join("\n")+"\n")
+      end
     end
   end
 
